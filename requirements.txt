@@ -104,7 +104,6 @@ packaging==23.2
 pandas==2.2.2
 parso==0.8.4
 pillow==10.3.0
-pipwin==0.5.2
 posthog==3.5.0
 prompt-toolkit==3.0.43
 proto-plus==1.23.0
