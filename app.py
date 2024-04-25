@@ -188,8 +188,8 @@ def main():
             st.write(message["content"])
 
     # User input selection: speech or text
-    user_input_method = st.radio("Select Interaction preference:", ("Speech", "Text"), format_func=lambda x: 'Vocal' if x == 'Speech' else ' Text')
-
+    st.write("Select Interaction preference:")  # Text above the radio buttons
+    user_input_method = st.radio("", ("Text", "Speech"), index=0, format_func=lambda x: 'Vocal' if x == 'Speech' else ' Text')  # Default selected option is "Text"
     if user_input_method == "Speech":
         # Voice input
         if st.button("Speak Query🎙️"):
