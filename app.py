@@ -16,8 +16,6 @@ from datetime import datetime
 # Define your API key here
 GOOGLE_API_KEY = "AIzaSyCDknvL-10pgb9hr_BP-i7JzYVIpzVHdoo"
 
-# Configure Google Generative AI with the API key
-genai.configure(api_key=GOOGLE_API_KEY)
 # read all pdf files and return text
 def get_pdf_text(pdf_docs):
     text = ""
@@ -75,7 +73,6 @@ def user_input(user_question):
     print(response)
     return response
 
-# Function to generate PDF and save it to the user's downloads folder
 def generate_pdf(messages):
     pdf = FPDF()
     pdf.add_page()
@@ -89,16 +86,12 @@ def generate_pdf(messages):
             encoded_content = content.encode('latin-1', errors='ignore')
             pdf.multi_cell(0, 10, txt=f"{role}: {encoded_content.decode('latin-1')}")
 
-    # Get the user's downloads folder
+    pdf_file_name = "chat_history.pdf"
     download_folder_path = os.path.join(os.path.expanduser("~"), "Downloads")
-    # Generate a unique filename using the current timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pdf_file_name = f"chat_history_{timestamp}.pdf"
     pdf_file_path = os.path.join(download_folder_path, pdf_file_name)
 
-    # Save the PDF to the downloads folder
     pdf.output(pdf_file_path)
-    st.success(f"Chat history downloaded as {pdf_file_path}")
+    return pdf_file_path
     
 # Function to extract basic information about PDFs
 def get_pdf_info(pdf_docs):
@@ -123,9 +116,8 @@ def main():
         page_icon="📚"
     )
     # Sidebar for Documentation button
-    # Sidebar for Documentation button
     st.sidebar.button(" View  Documentation🗒️", on_click=open_documentation)
-    st.sidebar.image("img/spacer.PNG")
+    st.sidebar.image("img/spacer.png")
     
 
      # Sidebar for uploading PDF files
@@ -163,7 +155,7 @@ def main():
         st.sidebar.button('Clear Chat History', key=clear_button_key, on_click=clear_chat_history)
         
         st.write("---")
-        st.sidebar.image("img/spacer.PNG")
+        st.sidebar.image("img/spacer.png")
         st.image("img/webapp.gif")
         st.write("""
         An AI App Developed by 
@@ -195,29 +187,9 @@ def main():
             st.write(message["content"])
 
     # User input selection: speech or text
-    user_input_method = st.radio("Select Interaction preference:", ("Text", "Speech"), index=0, format_func=lambda x: 'Vocal' if x == 'Speech' else ' Text')
+    user_input_method = st.radio("Select Interaction preference:", ("Speech", "Text"), format_func=lambda x: 'Vocal' if x == 'Speech' else ' Text')
 
-
-    if user_input_method == "Text":
-        # Text input
-        if prompt := st.chat_input("Enter your query✍️:"):
-            st.session_state.messages.append(
-                {"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.write(prompt)
-            with st.spinner("Thinking🤔💭.."):
-                response = user_input(prompt)
-                placeholder = st.empty()
-                full_response = ''
-                for item in response['output_text']:
-                    full_response += item
-                    placeholder.markdown(full_response)
-                placeholder.markdown(full_response)
-            if response is not None:
-                message = {"role": "assistant", "content": full_response}
-                st.session_state.messages.append(message)
-
-    elif user_input_method == "Speech":
+    if user_input_method == "Speech":
         # Voice input
         if st.button("Speak Query🎙️"):
             recognizer = sr.Recognizer()
@@ -250,16 +222,26 @@ def main():
 
         if st.button("Auditory Feedback🔉"):
             last_response = st.session_state.messages[-1]["content"]
-            # Initialize the TTS engine
-            engine = pyttsx3.init()
-            # Set the voice property to a male voice
-            voices = engine.getProperty('voices')
-            engine.setProperty('voice', voices[0].id)  # Change the index to select a different male voice
-            engine.setProperty('rate', 150)
-            # Convert text to speech
-            engine.say(last_response)
-            engine.runAndWait()
-    
+            text_to_speech(last_response)
+
+    elif user_input_method == "Text":
+        # Text input
+        if prompt := st.chat_input("Enter your query✍️:"):
+            st.session_state.messages.append(
+                {"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.write(prompt)
+            with st.spinner("Thinking🤔💭.."):
+                response = user_input(prompt)
+                placeholder = st.empty()
+                full_response = ''
+                for item in response['output_text']:
+                    full_response += item
+                    placeholder.markdown(full_response)
+                placeholder.markdown(full_response)
+            if response is not None:
+                message = {"role": "assistant", "content": full_response}
+                st.session_state.messages.append(message)
 
     # Black strip with GitHub link
     st.markdown(
@@ -271,16 +253,26 @@ def main():
         """,
         unsafe_allow_html=True
     )
-    # Download Chat button
     if st.button("Download Chat 💾"):
-        generate_pdf(st.session_state.messages)
+        pdf_file_path = generate_pdf(st.session_state.messages)
+        st.success(f"Chat history downloaded as {pdf_file_path}")
     
 def open_documentation():
     import webbrowser
     url = "https://anujj-jaiswal.github.io/MultiPDF-Chatbot-Documentation/"  # Replace with your documentation URL
     webbrowser.open_new_tab(url)
 
-   
+# Function to convert text to speech using gTTS and play it in the Streamlit app
+def text_to_speech(text):
+    tts = gTTS(text=text, lang='en')
+    # Create a BytesIO object to store audio data in memory
+    audio_bytes = BytesIO()
+    # Save the audio to the BytesIO object
+    tts.write_to_fp(audio_bytes)
+    # Reset the BytesIO object to the beginning
+    audio_bytes.seek(0)
+    # Play the audio in the Streamlit app
+    st.audio(audio_bytes, format='audio/mp3', start_time=0)
 
 if __name__ == "__main__":
     main()
