@@ -8,12 +8,11 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-import speech_recognition as sr
+from dotenv import load_dotenv
+import speech_recognition as sr 
 from fpdf import FPDF
 from gtts import gTTS
 from io import BytesIO
-import pocketsphinx
-from pocketsphinx import pocketsphinx
 
 # Define your API key here
 GOOGLE_API_KEY = "AIzaSyCDknvL-10pgb9hr_BP-i7JzYVIpzVHdoo"
@@ -194,7 +193,7 @@ def main():
     if user_input_method == "Speech":
         # Voice input
         if st.button("Speak Query🎙️"):
-            recognizer = sr.Recognizer()  # Use sr.Recognizer() from speech_recognition library
+            recognizer = sr.Recognizer()
             with sr.Microphone() as source:
                 st.write("Listening👂...")
                 audio = recognizer.listen(source)
