@@ -8,10 +8,11 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
+from dotenv import load_dotenv
 import speech_recognition as sr 
-import pyttsx3
 from fpdf import FPDF
-from datetime import datetime
+from gtts import gTTS
+from io import BytesIO
 
 # Define your API key here
 GOOGLE_API_KEY = "AIzaSyCDknvL-10pgb9hr_BP-i7JzYVIpzVHdoo"
@@ -117,7 +118,7 @@ def main():
     )
     # Sidebar for Documentation button
     st.sidebar.button(" View  Documentation🗒️", on_click=open_documentation)
-    st.sidebar.image("img/spacer.png")
+    st.sidebar.image("img/spacer.PNG")
     
 
      # Sidebar for uploading PDF files
@@ -155,7 +156,7 @@ def main():
         st.sidebar.button('Clear Chat History', key=clear_button_key, on_click=clear_chat_history)
         
         st.write("---")
-        st.sidebar.image("img/spacer.png")
+        st.sidebar.image("img/spacer.PNG")
         st.image("img/webapp.gif")
         st.write("""
         An AI App Developed by 
