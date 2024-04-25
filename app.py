@@ -9,10 +9,11 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
-import speech_recognition as sr 
 from fpdf import FPDF
 from gtts import gTTS
 from io import BytesIO
+import sounddevice as sd
+import soundfile as sf  # for saving audio file
 
 # Define your API key here
 GOOGLE_API_KEY = "AIzaSyCDknvL-10pgb9hr_BP-i7JzYVIpzVHdoo"
@@ -193,33 +194,31 @@ def main():
     if user_input_method == "Speech":
         # Voice input
         if st.button("Speak Query🎙️"):
-            recognizer = sr.Recognizer()
-            with sr.Microphone() as source:
-                st.write("Listening👂...")
-                audio = recognizer.listen(source)
-                try:
-                    user_query = recognizer.recognize_google(audio)
-                    st.session_state.messages.append(
-                        {"role": "user", "content": user_query})
-                    with st.chat_message("user"):
-                        st.write(user_query)
-                    with st.spinner("Thinking🤔💭..."):
-                        response = user_input(user_query)
-                        placeholder = st.empty()
-                        full_response = ''
-                        for item in response['output_text']:
-                            full_response += item
-                            placeholder.markdown(full_response)
-                        placeholder.markdown(full_response)
-                    if response is not None:
-                        message = {"role": "assistant",
-                                   "content": full_response}
-                        st.session_state.messages.append(message)
-                except sr.UnknownValueError:
-                    st.error("Sorry, I could not understand what you said.")
-                except sr.RequestError as e:
-                    st.error(
-                        f"Could not request results from Google Speech Recognition service; {e}")
+            with st.spinner("Listening👂..."):
+                duration = 5  # seconds
+                fs = 44100  # Sample rate
+                recording = sd.rec(int(duration * fs), samplerate=fs, channels=2)
+                sd.wait()  # Wait until recording is finished
+                sf.write('output.wav', recording, fs)
+
+            st.write("Recording saved as output.wav")
+            user_query = recognize_speech('output.wav')
+            st.session_state.messages.append(
+                {"role": "user", "content": user_query})
+            with st.chat_message("user"):
+                st.write(user_query)
+            with st.spinner("Thinking🤔💭..."):
+                response = user_input(user_query)
+                placeholder = st.empty()
+                full_response = ''
+                for item in response['output_text']:
+                    full_response += item
+                    placeholder.markdown(full_response)
+                placeholder.markdown(full_response)
+            if response is not None:
+                message = {"role": "assistant",
+                           "content": full_response}
+                st.session_state.messages.append(message)
 
         if st.button("Auditory Feedback🔉"):
             last_response = st.session_state.messages[-1]["content"]
@@ -274,6 +273,19 @@ def text_to_speech(text):
     audio_bytes.seek(0)
     # Play the audio in the Streamlit app
     st.audio(audio_bytes, format='audio/mp3', start_time=0)
+
+# Function to recognize speech from audio file
+def recognize_speech(audio_file):
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(audio_file) as source:
+        audio_data = recognizer.record(source)  # Read the entire audio file
+        try:
+            user_query = recognizer.recognize_google(audio_data)
+            return user_query
+        except sr.UnknownValueError:
+            return "Sorry, I could not understand what you said."
+        except sr.RequestError as e:
+            return f"Could not request results from Google Speech Recognition service; {e}"
 
 if __name__ == "__main__":
     main()
