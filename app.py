@@ -240,6 +240,10 @@ def main():
                     full_response += item
                     placeholder.markdown(full_response)
                 placeholder.markdown(full_response)
+                
+                # Automatically trigger text-to-speech after response is generated
+                text_to_speech(full_response)
+                
             if response is not None:
                 message = {"role": "assistant", "content": full_response}
                 st.session_state.messages.append(message)
